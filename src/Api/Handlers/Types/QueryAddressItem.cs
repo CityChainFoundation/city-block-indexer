@@ -61,5 +61,7 @@ namespace Nako.Api.Handlers.Types
         /// Gets or sets the transaction time.
         /// </summary>
         public long Time { get; set; }
+
+        public string Hex { get; set; }
     }
 }

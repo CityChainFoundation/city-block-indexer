@@ -35,6 +35,8 @@ namespace Nako.Storage.Types
 
         public long Time { get; set; }
 
+        public string Hex { get; set; }
+
         #endregion
     }
 }

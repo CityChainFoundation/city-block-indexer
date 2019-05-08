@@ -372,7 +372,8 @@ namespace Nako.Storage.Mongo
                 Confirmations = s.BlockIndex == -1 ? 0 : current.BlockIndex - s.BlockIndex + 1, 
                 SpendingTransactionHash = s.SpendingTransactionId, 
                 CoinBase = s.CoinBase ? s.TransactionId : string.Empty, 
-                ScriptHex = s.ScriptHex
+                ScriptHex = s.ScriptHex,
+                Hex = s.Hex
             });
         }
 
@@ -402,7 +403,8 @@ namespace Nako.Storage.Mongo
                                              Index = output.N, 
                                              Addresses = output.ScriptPubKey.Addresses, 
                                              BlockIndex = -1, 
-                                             CoinBase = coinBase
+                                             CoinBase = coinBase,
+                                             Hex = rawTransaction.Hex
                                          };
 
                 foreach (var output in transactionOutputs)

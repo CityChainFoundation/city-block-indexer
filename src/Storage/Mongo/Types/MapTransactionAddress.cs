@@ -37,6 +37,8 @@ namespace Nako.Storage.Mongo.Types
 
         public bool CoinBase { get; set; }
 
+        public string Hex { get; set; }
+
         #endregion
     }
 }

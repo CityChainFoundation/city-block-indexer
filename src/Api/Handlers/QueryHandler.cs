@@ -63,8 +63,8 @@ namespace Nako.Api.Handlers
                 TotalReceived = stats.Received, 
                 TotalSent = stats.Sent, 
                 UnconfirmedBalance = stats.Unconfirmed, 
-                Transactions = confirmed.Select(t => new QueryAddressItem { PubScriptHex = t.ScriptHex, CoinBase = t.CoinBase, Index = t.Index, SpendingTransactionHash = t.SpendingTransactionHash, TransactionHash = t.TransactionHash, Type = t.Type, Value = t.Value, BlockIndex = t.BlockIndex, Confirmations = t.Confirmations, Time = t.Time }), 
-                UnconfirmedTransactions = unconfirmed.Select(t => new QueryAddressItem { PubScriptHex = t.ScriptHex, CoinBase = t.CoinBase, Index = t.Index, SpendingTransactionHash = t.SpendingTransactionHash, TransactionHash = t.TransactionHash, Type = t.Type, Value = t.Value, BlockIndex = t.BlockIndex, Confirmations = t.Confirmations, Time = t.Time })
+                Transactions = confirmed.Select(t => new QueryAddressItem { PubScriptHex = t.ScriptHex, CoinBase = t.CoinBase, Index = t.Index, SpendingTransactionHash = t.SpendingTransactionHash, TransactionHash = t.TransactionHash, Type = t.Type, Value = t.Value, BlockIndex = t.BlockIndex, Confirmations = t.Confirmations, Time = t.Time, Hex = t.Hex }), 
+                UnconfirmedTransactions = unconfirmed.Select(t => new QueryAddressItem { PubScriptHex = t.ScriptHex, CoinBase = t.CoinBase, Index = t.Index, SpendingTransactionHash = t.SpendingTransactionHash, TransactionHash = t.TransactionHash, Type = t.Type, Value = t.Value, BlockIndex = t.BlockIndex, Confirmations = t.Confirmations, Time = t.Time, Hex = t.Hex })
             };
         }
 
@@ -134,8 +134,8 @@ namespace Nako.Api.Handlers
                 TotalReceived = stats.Received, 
                 TotalSent = stats.Sent, 
                 UnconfirmedBalance = stats.Unconfirmed, 
-                Transactions = confirmed.Select(t => new QueryAddressItem { PubScriptHex = t.ScriptHex, CoinBase = t.CoinBase, Index = t.Index, SpendingTransactionHash = t.SpendingTransactionHash, TransactionHash = t.TransactionHash, Type = t.Type, Value = t.Value, BlockIndex = t.BlockIndex, Confirmations = t.Confirmations, Time = t.Time }), 
-                UnconfirmedTransactions = unconfirmed.Select(t => new QueryAddressItem { PubScriptHex = t.ScriptHex, CoinBase = t.CoinBase, Index = t.Index, SpendingTransactionHash = t.SpendingTransactionHash, TransactionHash = t.TransactionHash, Type = t.Type, Value = t.Value, BlockIndex = t.BlockIndex, Confirmations = t.Confirmations, Time = t.Time })
+                Transactions = confirmed.Select(t => new QueryAddressItem { PubScriptHex = t.ScriptHex, CoinBase = t.CoinBase, Index = t.Index, SpendingTransactionHash = t.SpendingTransactionHash, TransactionHash = t.TransactionHash, Type = t.Type, Value = t.Value, BlockIndex = t.BlockIndex, Confirmations = t.Confirmations, Time = t.Time, Hex = t.Hex }), 
+                UnconfirmedTransactions = unconfirmed.Select(t => new QueryAddressItem { PubScriptHex = t.ScriptHex, CoinBase = t.CoinBase, Index = t.Index, SpendingTransactionHash = t.SpendingTransactionHash, TransactionHash = t.TransactionHash, Type = t.Type, Value = t.Value, BlockIndex = t.BlockIndex, Confirmations = t.Confirmations, Time = t.Time, Hex = t.Hex })
             };
         }
 
@@ -162,7 +162,7 @@ namespace Nako.Api.Handlers
                 TotalSent = stats.Sent, 
                 UnconfirmedBalance = stats.Unconfirmed, 
                 Transactions = Enumerable.Empty<QueryAddressItem>(), 
-                UnconfirmedTransactions = transactions.Select(t => new QueryAddressItem { PubScriptHex = t.ScriptHex, CoinBase = t.CoinBase, Index = t.Index, SpendingTransactionHash = t.SpendingTransactionHash, TransactionHash = t.TransactionHash, Type = t.Type, Value = t.Value, BlockIndex = t.BlockIndex, Confirmations = t.Confirmations, Time = t.Time })
+                UnconfirmedTransactions = transactions.Select(t => new QueryAddressItem { PubScriptHex = t.ScriptHex, CoinBase = t.CoinBase, Index = t.Index, SpendingTransactionHash = t.SpendingTransactionHash, TransactionHash = t.TransactionHash, Type = t.Type, Value = t.Value, BlockIndex = t.BlockIndex, Confirmations = t.Confirmations, Time = t.Time, Hex = t.Hex })
             };
         }
 
@@ -188,7 +188,7 @@ namespace Nako.Api.Handlers
                 TotalReceived = stats.Received, 
                 TotalSent = stats.Sent, 
                 UnconfirmedBalance = stats.Unconfirmed, 
-                Transactions = transactions.Select(t => new QueryAddressItem { PubScriptHex = t.ScriptHex, CoinBase = t.CoinBase, Index = t.Index, SpendingTransactionHash = t.SpendingTransactionHash, TransactionHash = t.TransactionHash, Type = t.Type, Value = t.Value, BlockIndex = t.BlockIndex, Confirmations = t.Confirmations, Time = t.Time }), 
+                Transactions = transactions.Select(t => new QueryAddressItem { PubScriptHex = t.ScriptHex, CoinBase = t.CoinBase, Index = t.Index, SpendingTransactionHash = t.SpendingTransactionHash, TransactionHash = t.TransactionHash, Type = t.Type, Value = t.Value, BlockIndex = t.BlockIndex, Confirmations = t.Confirmations, Time = t.Time, Hex = t.Hex }), 
                 UnconfirmedTransactions = Enumerable.Empty<QueryAddressItem>()
             };
         }
