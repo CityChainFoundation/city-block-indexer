@@ -12,10 +12,12 @@ using Nako.Crypto;
 
 namespace Nako.Sync
 {
+    using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.Caching.Memory;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using Nako.Client;
@@ -41,19 +43,25 @@ namespace Nako.Sync
 
         private readonly System.Diagnostics.Stopwatch watch;
 
+        private readonly IMemoryCache cache;
+
+        MemoryCacheEntryOptions cacheOptions;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SyncOperations"/> class.
         /// </summary>
-        public SyncOperations(IStorage storage, ILogger<SyncOperations> logger, IOptions<NakoConfiguration> configuration)
+        public SyncOperations(IStorage storage, ILogger<SyncOperations> logger, IOptions<NakoConfiguration> configuration, IMemoryCache cache)
         {
             this.configuration = configuration.Value;
             this.log = logger;
             this.storage = storage;
+            this.cache = cache;
 
             // Register the cold staking template.
             StandardScripts.RegisterStandardScriptTemplate(ColdStakingScriptTemplate.Instance);
 
             this.watch = Stopwatch.Start();
+            this.cacheOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(CacheKeys.BlockCountTime);
         }
 
         public SyncBlockOperation FindBlock(SyncConnection connection, SyncingBlocks container)
@@ -160,13 +168,26 @@ namespace Nako.Sync
             return new SyncBlockOperation { BlockInfo = nextBlock, LastCryptoBlockIndex = lastCryptoBlockIndex };
         }
 
+        public long GetBlockCount(BitcoinClient client)
+        {
+            long cacheEntry;
+
+            if (!cache.TryGetValue(CacheKeys.BlockCount, out cacheEntry))
+            {
+                cacheEntry = client.GetBlockCount();
+
+                // Save data in cache.
+                cache.Set(CacheKeys.BlockCount, cacheEntry, cacheOptions);
+            }
+
+            return cacheEntry;
+        }
+
         private SyncBlockOperation FindBlockInternal(SyncConnection connection, SyncingBlocks syncingBlocks)
         {
-            watch.Restart();
-
             var client = CryptoClientFactory.Create(connection.ServerDomain, connection.RpcAccessPort, connection.User, connection.Password, connection.Secure);
 
-            syncingBlocks.LastClientBlockIndex = client.GetBlockCount();
+            syncingBlocks.LastClientBlockIndex = GetBlockCount(client);
 
             var blockToSync = this.GetNextBlockToSync(client, connection, syncingBlocks.LastClientBlockIndex, syncingBlocks);
 
@@ -174,8 +195,6 @@ namespace Nako.Sync
             {
                 syncingBlocks.CurrentSyncing.TryAdd(blockToSync.BlockInfo.Hash, blockToSync.BlockInfo);
             }
-           
-            watch.Stop();
 
             return blockToSync;
         }
@@ -280,7 +299,7 @@ namespace Nako.Sync
             }
 
             //var blockItem = Block.Load(Encoders.Hex.DecodeData(hex), consensusFactory);
-            var returnBlock = new SyncBlockTransactionsOperation {BlockInfo = block, Transactions = blockItem.Transactions };  //this.SyncBlockTransactions(client, connection, block.Transactions, true);
+            var returnBlock = new SyncBlockTransactionsOperation { BlockInfo = block, Transactions = blockItem.Transactions };  //this.SyncBlockTransactions(client, connection, block.Transactions, true);
 
             return returnBlock;
         }
