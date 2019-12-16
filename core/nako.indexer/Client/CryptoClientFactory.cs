@@ -44,30 +44,13 @@ namespace Nako.Client
         /// </summary>
         public static BitcoinClient Create(string connection, int port, string user, string encPass, bool secure)
         {
-            // Set cache key name
-            var cacheKey = string.Format("{0}:{1}:{2}:{3}", connection, port, user, secure);
-
-            return Cache.GetOrCreate(cacheKey, t => BitcoinClient.Create(connection, port, user, encPass, secure));
-
-            //// Get storage source from cache if available
-            //var client = (BitcoinClient)Cache.Get(cacheKey);
-            //if (client == null)
-            //{
-            //    // Assuming no storage source in cache, attempt to create it
-            //    lock (CacheLock)
-            //    {
-            //        client = (BitcoinClient)Cache.Get(cacheKey);
-            //        if (client == null)
-            //        {
-            //            // Add to cache
-            //            client = BitcoinClient.Create(connection, port, user, encPass, secure);
-            //            Cache.CreateEntry(cacheKey, client, new CacheItemPolicy { SlidingExpiration = new TimeSpan(0, 60, 0) });
-            //        }
-            //    }
-            //}
-
-            //// Return storage source
-            //return client;
+            // Put a lock on the cache to avoid creating random number of clients on startup.
+            lock (Cache)
+            {
+                // Set cache key name
+                var cacheKey = string.Format("{0}:{1}:{2}:{3}", connection, port, user, secure);
+                return Cache.GetOrCreate(cacheKey, t => BitcoinClient.Create(connection, port, user, encPass, secure));
+            }
         }
 
         #endregion
