@@ -34,6 +34,8 @@ namespace Nako.Sync.SyncTasks
 
         private readonly ILogger<BlockSyncer> log;
 
+        private readonly System.Diagnostics.Stopwatch watch;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="BlockSyncer"/> class.
         /// </summary>
@@ -44,6 +46,7 @@ namespace Nako.Sync.SyncTasks
             this.syncConnection = syncConnection;
             this.syncOperations = syncOperations;
             this.config = configuration.Value;
+            this.watch = Stopwatch.Start();
         }
 
         /// <inheritdoc />
@@ -58,7 +61,7 @@ namespace Nako.Sync.SyncTasks
 
             if (this.TryDequeue(out item))
             {
-                var stoper = Stopwatch.Start();
+                watch.Restart();
 
                 try
                 {
@@ -71,7 +74,7 @@ namespace Nako.Sync.SyncTasks
 
                         this.Runner.Get<BlockStore>().Enqueue(block);
 
-                        this.log.LogDebug($"Seconds = {stoper.Elapsed.TotalSeconds} - BlockIndex = {block.BlockInfo.Height} - Transactions {block.Transactions.Count()} - Inputs {inputs} - Outputs {outputs} - ({inputs + outputs})");
+                        this.log.LogDebug($"Seconds = {watch.Elapsed.TotalSeconds} - BlockIndex = {block.BlockInfo.Height} - Transactions {block.Transactions.Count()} - Inputs {inputs} - Outputs {outputs} - ({inputs + outputs})");
                     }
 
                     if (item.PoolTransactions != null)
@@ -83,7 +86,7 @@ namespace Nako.Sync.SyncTasks
 
                         this.Runner.Get<BlockStore>().Enqueue(pool);
 
-                        this.log.LogDebug($"Seconds = {stoper.Elapsed.TotalSeconds} - Pool = Sync - Transactions {pool.Transactions.Count()} - Inputs {inputs} - Outputs {outputs} - ({inputs + outputs})");
+                        this.log.LogDebug($"Seconds = {watch.Elapsed.TotalSeconds} - Pool = Sync - Transactions {pool.Transactions.Count()} - Inputs {inputs} - Outputs {outputs} - ({inputs + outputs})");
                     }
                 }
                 catch (BitcoinClientException bce)
@@ -99,7 +102,7 @@ namespace Nako.Sync.SyncTasks
                     throw;
                 }
 
-                stoper.Stop();
+                watch.Stop();
 
                 return true;
             }

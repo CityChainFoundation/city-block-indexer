@@ -41,6 +41,8 @@ namespace Nako.Storage.Mongo
 
         private readonly NakoConfiguration configuration;
 
+        private readonly System.Diagnostics.Stopwatch watch;
+
         public MongoData(ILogger<MongoStorageOperations> logger, SyncConnection connection, IOptions<NakoConfiguration> nakoConfiguration)
         {
             this.syncConnection = connection;
@@ -50,6 +52,9 @@ namespace Nako.Storage.Mongo
             var dbName = this.configuration.DatabaseNameSubfix ? "Blockchain" + this.configuration.CoinTag : "Blockchain";
             this.mongoDatabase = this.mongoClient.GetDatabase(dbName);
             this.MemoryTransactions = new ConcurrentDictionary<string, NBitcoin.Transaction>();
+
+            // Make sure we only create a single instance of the watcher.
+            this.watch = Stopwatch.Start();
         }
 
         public IMongoCollection<MapTransactionAddress> MapTransactionAddress
@@ -388,15 +393,15 @@ namespace Nako.Storage.Mongo
                 filter = filter & builder.Eq(info => info.SpendingTransactionId, null);
             }
 
-            var stoper1 = Stopwatch.Start();
+            watch.Restart();
 
             var sort = Builders<MapTransactionAddress>.Sort.Descending(info => info.BlockIndex);
 
             var addrs = this.MapTransactionAddress.Find(filter).Sort(sort).ToList();
 
-            stoper1.Stop();
+            watch.Stop();
 
-            this.log.LogInformation($"Select: Seconds = {stoper1.Elapsed.TotalSeconds} - UnspentOnly = {availableOnly} - Addr = {address} - Items = {addrs.Count()}");
+            this.log.LogInformation($"Select: Seconds = {watch.Elapsed.TotalSeconds} - UnspentOnly = {availableOnly} - Addr = {address} - Items = {addrs.Count()}");
 
             // this creates a copy of the collection (to avoid thread issues)
             var pool = this.MemoryTransactions.Values;

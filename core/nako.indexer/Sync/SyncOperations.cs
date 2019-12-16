@@ -39,6 +39,8 @@ namespace Nako.Sync
 
         private readonly NakoConfiguration configuration;
 
+        private readonly System.Diagnostics.Stopwatch watch;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SyncOperations"/> class.
         /// </summary>
@@ -50,6 +52,8 @@ namespace Nako.Sync
 
             // Register the cold staking template.
             StandardScripts.RegisterStandardScriptTemplate(ColdStakingScriptTemplate.Instance);
+
+            this.watch = Stopwatch.Start();
         }
 
         public SyncBlockOperation FindBlock(SyncConnection connection, SyncingBlocks container)
@@ -158,7 +162,7 @@ namespace Nako.Sync
 
         private SyncBlockOperation FindBlockInternal(SyncConnection connection, SyncingBlocks syncingBlocks)
         {
-            var stoper = Stopwatch.Start();
+            watch.Restart();
 
             var client = CryptoClientFactory.Create(connection.ServerDomain, connection.RpcAccessPort, connection.User, connection.Password, connection.Secure);
 
@@ -171,14 +175,14 @@ namespace Nako.Sync
                 syncingBlocks.CurrentSyncing.TryAdd(blockToSync.BlockInfo.Hash, blockToSync.BlockInfo);
             }
            
-            stoper.Stop();
+            watch.Stop();
 
             return blockToSync;
         }
 
         private SyncPoolTransactions FindPoolInternal(SyncConnection connection, SyncingBlocks syncingBlocks)
         {
-            var stoper = Stopwatch.Start();
+            watch.Restart();
 
             var client = CryptoClientFactory.Create(connection.ServerDomain, connection.RpcAccessPort, connection.User, connection.Password, connection.Secure);
 
@@ -195,9 +199,9 @@ namespace Nako.Sync
             syncingBlocks.CurrentPoolSyncing.AddRange(newTransactions);
             deleteTransaction.ForEach(t => syncingBlocks.CurrentPoolSyncing.Remove(t));
 
-            stoper.Stop();
+            watch.Stop();
 
-            this.log.LogDebug($"SyncPool: Seconds = {stoper.Elapsed.TotalSeconds} - New Transactions = {newTransactions.Count()}");
+            this.log.LogDebug($"SyncPool: Seconds = {watch.Elapsed.TotalSeconds} - New Transactions = {newTransactions.Count()}");
 
             return new SyncPoolTransactions { Transactions = newTransactions };
         }
@@ -210,12 +214,10 @@ namespace Nako.Sync
 
         private SyncBlockTransactionsOperation SyncBlockTransactions(BitcoinClient client, SyncConnection connection, IEnumerable<string> transactionsToSync, bool throwIfNotFound)
         {
-            var stoper = new System.Diagnostics.Stopwatch();
-            stoper.Start();
-
             var itemList = transactionsToSync.Select(t => new tcalc { item = t }).ToList();
 
             var options = new ParallelOptions { MaxDegreeOfParallelism = this.configuration.ParallelRequestsToTransactionRpc };
+
             Parallel.ForEach(itemList, options, (item) =>
             {
                 try
@@ -248,7 +250,7 @@ namespace Nako.Sync
 
         private SyncBlockTransactionsOperation SyncPoolInternal(SyncConnection connection, SyncPoolTransactions poolTransactions)
         {
-            var watch = Stopwatch.Start();
+            watch.Restart();
 
             var client = CryptoClientFactory.Create(connection.ServerDomain, connection.RpcAccessPort, connection.User, connection.Password, connection.Secure);
 
@@ -266,8 +268,6 @@ namespace Nako.Sync
 
         private SyncBlockTransactionsOperation SyncBlockInternal(SyncConnection connection, BlockInfo block)
         {
-            var watch = Stopwatch.Start();
-
             var client = CryptoClientFactory.Create(connection.ServerDomain, connection.RpcAccessPort, connection.User, connection.Password, connection.Secure);
 
             var hex = client.GetBlockHex(block.Hash);
@@ -281,8 +281,6 @@ namespace Nako.Sync
 
             //var blockItem = Block.Load(Encoders.Hex.DecodeData(hex), consensusFactory);
             var returnBlock = new SyncBlockTransactionsOperation {BlockInfo = block, Transactions = blockItem.Transactions };  //this.SyncBlockTransactions(client, connection, block.Transactions, true);
-
-            watch.Stop();
 
             return returnBlock;
         }

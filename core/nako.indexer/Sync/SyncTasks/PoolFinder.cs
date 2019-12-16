@@ -30,6 +30,8 @@ namespace Nako.Sync.SyncTasks
 
         private readonly ILogger<PoolFinder> log;
 
+        private readonly System.Diagnostics.Stopwatch watch;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PoolFinder"/> class.
         /// </summary>
@@ -40,6 +42,7 @@ namespace Nako.Sync.SyncTasks
             this.syncConnection = syncConnection;
             this.syncOperations = syncOperations;
             this.config = configuration.Value;
+            this.watch = Stopwatch.Start();
         }
 
         /// <inheritdoc />
@@ -69,7 +72,7 @@ namespace Nako.Sync.SyncTasks
                 return false;
             }
 
-            var stoper = Stopwatch.Start();
+            watch.Restart();
 
             var pool = this.syncOperations.FindPoolTransactions(this.syncConnection, syncingBlocks);
 
@@ -78,9 +81,9 @@ namespace Nako.Sync.SyncTasks
                 return false;
             }
 
-            stoper.Stop();
+            watch.Stop();
 
-            this.log.LogDebug($"Seconds = {stoper.Elapsed.TotalSeconds} - New Transactions = {pool.Transactions.Count}/{syncingBlocks.CurrentPoolSyncing.Count()}");
+            this.log.LogDebug($"Seconds = {watch.Elapsed.TotalSeconds} - New Transactions = {pool.Transactions.Count}/{syncingBlocks.CurrentPoolSyncing.Count()}");
 
             this.Runner.Get<BlockSyncer>().Enqueue(new SyncBlockOperation { PoolTransactions = pool });
 

@@ -34,6 +34,8 @@ namespace Nako.Sync.SyncTasks
 
         private readonly Lazy<HttpClient> client;
 
+        private readonly System.Diagnostics.Stopwatch watch;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Notifier"/> class. 
         /// </summary>
@@ -44,6 +46,7 @@ namespace Nako.Sync.SyncTasks
             this.log = logger;
             this.storage = storage;
             this.client = new Lazy<HttpClient>(() => new HttpClient(new HttpClientHandler { ServerCertificateCustomValidationCallback = (sender, certificate, chain, errors) => errors == SslPolicyErrors.None || errors == SslPolicyErrors.RemoteCertificateNameMismatch }));
+            this.watch = Stopwatch.Start();
         }
 
         /// <inheritdoc />
@@ -58,7 +61,7 @@ namespace Nako.Sync.SyncTasks
             AddressNotifications item;
             if (this.TryDequeue(out item))
             {
-                var stoper = Stopwatch.Start();
+                watch.Restart();
 
                 var queue = new Queue<string>(item.Addresses);
                 var total = queue.Count();
@@ -87,9 +90,9 @@ namespace Nako.Sync.SyncTasks
                 }
                 while (queue.Any());
 
-                stoper.Stop();
+                watch.Stop();
 
-                this.log.LogDebug($"Seconds = {stoper.Elapsed.TotalSeconds} - Total = {total} - Requests = {sendCount}");
+                this.log.LogDebug($"Seconds = {watch.Elapsed.TotalSeconds} - Total = {total} - Requests = {sendCount}");
 
                 return true;
             }

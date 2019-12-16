@@ -29,7 +29,10 @@ namespace Nako.Sync.SyncTasks
         private readonly ILogger<BlockStore> log;
 
         private readonly IStorageOperations storageOperations;
+
         private readonly SyncConnection syncConnection;
+
+        private readonly System.Diagnostics.Stopwatch watch;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BlockStore"/> class.
@@ -40,6 +43,7 @@ namespace Nako.Sync.SyncTasks
             this.storageOperations = storageOperations;
             this.syncConnection = syncConnection;
             this.log = logger;
+            this.watch = Stopwatch.Start();
         }
 
         /// <inheritdoc />
@@ -49,7 +53,7 @@ namespace Nako.Sync.SyncTasks
 
             if (this.TryDequeue(out item))
             {
-                var stoper = Stopwatch.Start();
+                watch.Restart();
 
                 this.storageOperations.ValidateBlock(item);
 
@@ -63,17 +67,17 @@ namespace Nako.Sync.SyncTasks
                         throw new Exception(string.Format("Failed to remove block hash {0} from collection", item.BlockInfo.Hash));
                     }
 
-                    this.syncConnection.RecentItems.Add((DateTime.UtcNow, stoper.Elapsed, item.BlockInfo.Size));
+                    this.syncConnection.RecentItems.Add((DateTime.UtcNow, watch.Elapsed, item.BlockInfo.Size));
                 }
 
                 var notifications = new AddressNotifications { Addresses = count.Items.Where( ad => ad.Addresses != null).SelectMany(s => s.Addresses).Distinct().ToList() };
                 this.Runner.Get<Notifier>().Enqueue(notifications);
 
-                stoper.Stop();
+                watch.Stop();
 
                 var message = item.BlockInfo != null ? 
-                    string.Format("Seconds = {0} - BlockIndex = {1} - TotalItems = {2} - Size = {3} kb", stoper.Elapsed.TotalSeconds, item.BlockInfo.Height, count.Transactions + count.InputsOutputs, item.BlockInfo.Size) :
-                    string.Format("Seconds = {0} - PoolSync - TotalItems = {1}", stoper.Elapsed.TotalSeconds, count.Transactions + count.InputsOutputs);
+                    string.Format("Seconds = {0} - BlockIndex = {1} - TotalItems = {2} - Size = {3} bytes", watch.Elapsed.TotalSeconds, item.BlockInfo.Height, count.Transactions + count.InputsOutputs, item.BlockInfo.Size) :
+                    string.Format("Seconds = {0} - PoolSync - TotalItems = {1}", watch.Elapsed.TotalSeconds, count.Transactions + count.InputsOutputs);
 
                 
                 this.log.LogDebug(message);

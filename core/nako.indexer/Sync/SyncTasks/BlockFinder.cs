@@ -33,6 +33,8 @@ namespace Nako.Sync.SyncTasks
 
         private readonly ILogger<BlockFinder> log;
 
+        private readonly System.Diagnostics.Stopwatch watch;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="BlockFinder"/> class.
         /// </summary>
@@ -43,6 +45,7 @@ namespace Nako.Sync.SyncTasks
             this.syncConnection = syncConnection;
             this.syncOperations = syncOperations;
             this.config = configuration.Value;
+            this.watch = Stopwatch.Start();
         }
 
         /// <inheritdoc />
@@ -66,7 +69,7 @@ namespace Nako.Sync.SyncTasks
                 return false;
             }
 
-            var stoper = Stopwatch.Start();
+            watch.Restart();
 
             var block = this.syncOperations.FindBlock(this.syncConnection, syncingBlocks);
 
@@ -75,10 +78,10 @@ namespace Nako.Sync.SyncTasks
                 return false;
             }
 
-            stoper.Stop();
+            watch.Stop();
 
             var blockStatus = block.IncompleteBlock ? "Incomplete" : string.Empty;
-            this.log.LogDebug($"Seconds = {stoper.Elapsed.TotalSeconds} - SyncedIndex = {block.BlockInfo.Height}/{block.LastCryptoBlockIndex} - {block.LastCryptoBlockIndex - block.BlockInfo.Height} {blockStatus}");
+            this.log.LogDebug($"Seconds = {watch.Elapsed.TotalSeconds} - SyncedIndex = {block.BlockInfo.Height}/{block.LastCryptoBlockIndex} - {block.LastCryptoBlockIndex - block.BlockInfo.Height} {blockStatus}");
 
             this.Runner.Get<BlockSyncer>().Enqueue(block);
 
